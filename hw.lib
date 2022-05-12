@@ -1,0 +1,378 @@
+TOTALCALCULATION MACRO;Macro to calculate and print the bill in the file
+ APPEND FILESPACE
+ APPEND promtTotals
+ mov ax,totalammount
+		mov cx,0
+		S_break5:
+		  mov bl,10
+		  div bl
+		  mov dx,0
+		  mov dl,ah
+		  push dx
+		  inc cx
+		  mov ah,0
+		  cmp al,0
+		  je S_display5
+		  jmp S_break5
+mov si,offset TOTALBILL
+		S_display5:
+		pop dx
+		add dx, 48
+		mov temp,DX
+        APPEND temp
+		loop S_display5
+ 
+
+
+
+
+
+    
+
+  
+
+
+  ENDM
+
+
+printtotalamount MACRO TM
+; part of code to print double digit ; to print multiple digits
+mov ax,TM
+		mov cx,0
+		S_break:
+		  mov bl,10
+		  div bl
+		  mov dx,0
+		  mov dl,ah
+		  push dx
+		  inc cx
+		  mov ah,0
+		  cmp al,0
+		  je S_display
+		  jmp S_break
+
+		S_display:
+		pop dx
+		add dx, 48
+		mov ah,02
+		int 21h
+		loop S_display
+
+ENDM
+
+
+APPEND MACRO BUFFER; macro to append data in file
+push dx
+    push cx
+    push bx
+    push ax 
+
+
+
+;open file
+
+	mov AL, 01h
+	mov AH, 3Dh
+	lea DX, FILENAME
+	int 21h
+	mov BX, AX
+	
+	; move file pointer to end to append text at end
+
+	mov DX, 00h
+	mov CX, 00h
+	mov AH, 42h    
+	mov AL, 02h
+	int 21h
+
+	; append data to file
+
+	mov AH, 40h
+	mov CX, LENGTHOF  BUFFER
+	lea DX, BUFFER
+	int 21h
+
+	; close file
+
+	mov AH, 3Eh
+	int 21h
+
+
+
+
+
+
+
+pop ax
+    pop bx
+    pop cx
+    pop dx
+
+ENDM
+
+COLOR MACRO ;;macro for color the text and scree
+   push dx
+    push cx
+    push bx
+    push ax
+
+    MOV AH, 0 ; set video mode 
+MOV AL, 04 
+INT 10H ; call the DOS interrupt RET ; return to
+
+mov AH,0Bh
+mov bl,001b ; setting color blue
+int 10h
+
+pop ax
+    pop bx
+    pop cx
+    pop dx
+
+ENDM
+
+WRITE MACRO buffer;; macro to print the simple string on screen
+    push dx
+    push cx
+    push bx
+    push ax
+
+
+
+LEA dx, buffer
+mov ah,09h
+  int 21h
+
+
+    pop ax
+    pop bx
+    pop cx
+    pop dx
+ENDM
+
+LOGIN MACRO ;; login process
+    push dx
+    push cx
+    push bx
+    push ax
+
+WRITE LOGINPAGE; login
+AGAIN:
+WRITE ENTERPASSWORD ;; loop continue until admin is typed correctly
+
+
+
+   mov si,offset PASSWORD
+   mov di, offset DEFAULTPASSWORD
+mov cx, sizeof DEFAULTPASSWORD
+looppassword:
+mov ah,01h
+int 21h
+mov [si],al
+mov bl,[di]
+    cmp bl,al
+    JNE NOTEQUAL
+    inc si
+    inc di
+loop looppassword
+
+jmp EQUAL
+
+NOTEQUAL:
+
+LEA dx,PASSWORDINCORRECT
+mov ah,09h
+int 21h
+
+
+LEA dx,ENTERAGAIN
+mov ah,09h
+int 21h
+jmp AGAIN
+
+
+
+
+
+   
+   
+   
+    pop ax
+    pop bx
+    pop cx
+    pop dx
+
+
+
+ENDM
+
+
+WELCOME MACRO ;;macro for welcome screen
+STT:
+    push dx
+    push cx
+    push bx
+    push ax
+
+    MOV AH, 0 ; set video mode 
+MOV AL, 04 
+INT 10H ; call the DOS interrupt RET ; return to
+
+mov AH,0Bh
+mov bl,001b ; setting color blue
+int 10h
+ WRITE MSG1; WELCOME
+    call space
+ WRITE AHMAD
+ WRITE WALEED
+ WRITE USAMA
+ call space
+ WRITE PRESSENTER ; PRESS ENTER TO LOGIN
+
+
+
+mov ah,01h
+int 21h
+
+cmp al,13
+JNE STT
+
+    POP ax
+    POP bx
+    POP cx
+    POP dx
+
+ENDM
+
+CLEAR MACRO ;;Macro to clear the screen
+
+push dx
+    push cx
+    push bx
+    push ax
+
+ mov ax,06H
+mov cx,0
+mov dx,184FH
+mov bh,17h 
+mov bl,17h
+int 10H
+;
+mov AH,0Bh
+mov bl,001b ; setting color blue
+mov bh,0Fh
+int 10h
+;
+;   mov ah,2
+;   mov bh,0
+;   mov dx,0
+;   int 10h
+
+   mov ah, 2   ; use function 2 - go to x,y
+mov bh, 0   ; display page 0
+mov dh, 0   ; y coordinate to move cursor to
+mov dl, 0   ; x coordinate to move cursor to
+int 10h ; go!
+;
+;mov ah, 0ah
+;mov cx, 1000h
+;mov al, 20h
+;mov bl, 17h ;color
+;int 10h
+POP ax
+    POP bx
+    POP cx
+    POP dx
+
+ENDM
+
+ORDERDETAILS MACRO ;; macro to collect order details
+    push dx
+    push cx
+    push bx
+    push ax
+
+WRITE PROMTENTERYOURDETAILS
+    LEA dx,ENTERNAME
+    mov ah,09h
+    int 21h
+
+
+
+mov bx,0
+mov si,offset USERNAME
+
+ENTERUSERNAME:
+  mov ax,0
+  mov ah,01h
+  int 21h
+
+mov [si],al
+inc si
+inc bx
+cmp al,13
+JNE ENTERUSERNAME
+APPEND FILESPACE
+APPEND promtName
+APPEND USERNAME
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+WRITE ENTERHOMEADDRESS
+
+
+
+ mov bx,0
+mov si,offset ADDRESS
+
+ENTERADDRESSLOOP:
+  mov ax,0
+  mov ah,01h
+  int 21h
+
+mov [si],al
+inc si
+inc bx
+cmp al,13
+JNE ENTERADDRESSLOOP
+
+clc
+APPEND FILESPACE
+APPEND promtName
+APPEND ADDRESS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WRITE ENTERPHONE
+mov bx,0
+mov si,offset PHONE
+
+ENTERPHONELOOP:
+  mov ax,0
+  mov ah,01h
+  int 21h
+
+mov [si],al
+inc si
+inc bx
+cmp al,13
+JNE ENTERPHONELOOP
+
+clc
+APPEND FILESPACE
+APPEND promtPHONENO
+APPEND PHONE
+
+	
+
+TOTALCALCULATION
+
+ WRITE THANKYOU
+
+POP ax
+    POP bx
+    POP cx
+    POP dx
+
+    ENDM
